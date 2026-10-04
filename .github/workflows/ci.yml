@@ -1,0 +1,35 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: python3 -m unittest discover -s tests -v
+      - name: Compose both reference ideas from the live index (no repo creation) and run their tests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 -m blcompose.compose "A community governance token with permit approvals, vote delegation and an on-chain governor with a timelock" --name ci-governance --out /tmp/ci-gov --json gov.json
+          python3 -m blcompose.compose "An NFT membership collection with ERC-2981 royalties, role-based minting, a pause switch, and a paid mint priced in USD using a Chainlink ETH/USD price feed" --name ci-nft --out /tmp/ci-nft --json nft.json
+          set +e; python3 -m blcompose.compose "An AMM DEX with concentrated liquidity on Solana" --name ci-unsupported --out /tmp/ci-x > /dev/null; c=$?; set -e
+          test "$c" = "3" && echo "unsupported idea correctly refused (exit 3)"
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz | tar xz gitleaks
+          ./gitleaks detect --source . --redact --no-banner

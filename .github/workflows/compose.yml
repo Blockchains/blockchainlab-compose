@@ -1,0 +1,56 @@
+name: Compose a project
+# Dispatched by blockchainlab.com /forge (or by hand): idea -> new Blockchains/<name> repo with CI.
+on:
+  workflow_dispatch:
+    inputs:
+      idea:
+        description: "Plain-language idea"
+        required: true
+      name:
+        description: "New repo name under Blockchains"
+        required: true
+      request_id:
+        description: "Caller's id; result is committed to results/<request_id>.json"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: compose-${{ inputs.name }}
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: Require FORGE_TOKEN
+        env:
+          T: ${{ secrets.FORGE_TOKEN }}
+        run: |
+          if [ -z "$T" ]; then echo "::error::Add a FORGE_TOKEN secret (fine-grained PAT owned by Blockchains: Administration + Contents + Workflows + Actions read/write on all repos). GITHUB_TOKEN cannot create repositories."; exit 1; fi
+      - name: Install gitleaks
+        run: curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz | sudo tar xz -C /usr/local/bin gitleaks
+      - name: Compose, test, create repo, wait for CI
+        env:
+          GH_TOKEN: ${{ secrets.FORGE_TOKEN }}
+          IDEA: ${{ inputs.idea }}
+          NAME: ${{ inputs.name }}
+        run: |
+          git config --global user.name "Blockchain Lab Forge"
+          git config --global user.email "11951015+Blockchains@users.noreply.github.com"
+          gh auth setup-git
+          set +e; python3 -m blcompose.compose "$IDEA" --name "$NAME" --create --wait --json result.json; code=$?; set -e
+          cat result.json; echo "exit=$code"; echo "code=$code" >> "$GITHUB_ENV"
+      - name: Save result
+        if: inputs.request_id != ''
+        env:
+          RID: ${{ inputs.request_id }}
+        run: |
+          case "$RID" in *[!A-Za-z0-9._-]*) echo "bad request_id"; exit 1;; esac
+          mkdir -p results && cp result.json "results/$RID.json"
+          git add results && git commit -m "compose result $RID" && git push
+      - run: exit ${{ env.code }}
