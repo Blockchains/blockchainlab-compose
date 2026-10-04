@@ -19,9 +19,12 @@ jobs:
       - name: Compose both reference ideas from the live index (no repo creation) and run their tests
         env:
           GH_TOKEN: ${{ github.token }}
+          XAI_KEY: ${{ secrets.XAI_API_KEY }}  # one real Grok review call per CI run (NFT idea); skipped if unset
         run: |
           python3 -m blcompose.compose "A community governance token with permit approvals, vote delegation and an on-chain governor with a timelock" --name ci-governance --out /tmp/ci-gov --json gov.json
-          python3 -m blcompose.compose "An NFT membership collection with ERC-2981 royalties, role-based minting, a pause switch, and a paid mint priced in USD using a Chainlink ETH/USD price feed" --name ci-nft --out /tmp/ci-nft --json nft.json
+          XAI_API_KEY="$XAI_KEY" python3 -m blcompose.compose "An NFT membership collection with ERC-2981 royalties, role-based minting, a pause switch, and a paid mint priced in USD using a Chainlink ETH/USD price feed" --name ci-nft --out /tmp/ci-nft --json nft.json
+          python3 -c "import json;r=json.load(open('nft.json'))['grok_review'];print('grok_review:',r.get('status'),r.get('model'),(r.get('usage') or {}).get('total_tokens'))"
+          test -f /tmp/ci-nft/REVIEW.md && head -c 400 /tmp/ci-nft/REVIEW.md || true
           set +e; python3 -m blcompose.compose "An AMM DEX with concentrated liquidity on Solana" --name ci-unsupported --out /tmp/ci-x > /dev/null; c=$?; set -e
           test "$c" = "3" && echo "unsupported idea correctly refused (exit 3)"
   gitleaks:
