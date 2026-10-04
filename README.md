@@ -71,7 +71,7 @@ python3 -m blcompose.compose "A community governance token with permit approvals
 **Inputs → outputs**
 
 - In: `idea` (string) plain-language description; `--name` (string) new repo name; `--index` (path) local blockchainlab-index checkout (cloned if omitted)
-- Out: `Foundry project` (directory) src/, test/, script/Deploy.s.sol, CI, NOTICE, plan.json, component-map.json; `result JSON` (file) links, capabilities, components, test results; `exit 3` (code) idea needs an unsupported capability
+- Out: `Foundry project` (directory) src/, test/, script/Deploy.s.sol, CI, NOTICE, plan.json, component-map.json, plus AGENTS.md, llms.txt and a schema-valid blocks.json derived from the generated contracts; `result JSON` (file) links, capabilities, components, test results; `exit 3` (code) idea needs an unsupported capability
 
 **Composes with**
 

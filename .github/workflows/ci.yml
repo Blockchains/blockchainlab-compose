@@ -15,6 +15,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: foundry-rs/foundry-toolchain@v1
+      - run: pip install -q jsonschema
       - run: python3 -m unittest discover -s tests -v
       - name: Compose both reference ideas from the live index (no repo creation) and run their tests
         env:
@@ -27,6 +28,12 @@ jobs:
           test -f /tmp/ci-nft/REVIEW.md && head -c 400 /tmp/ci-nft/REVIEW.md || true
           set +e; python3 -m blcompose.compose "An AMM DEX with concentrated liquidity on Solana" --name ci-unsupported --out /tmp/ci-x > /dev/null; c=$?; set -e
           test "$c" = "3" && echo "unsupported idea correctly refused (exit 3)"
+      - name: Composed repos ship AGENTS.md, llms.txt and a schema-valid blocks.json
+        run: |
+          for d in /tmp/ci-gov /tmp/ci-nft; do
+            test -s $d/AGENTS.md && test -s $d/llms.txt
+            python3 -c "import json,sys;from blcompose import agentdocs;e=agentdocs.validate(json.load(open('$d/blocks.json')));print('$d/blocks.json', e or 'valid');sys.exit(1 if e else 0)"
+          done
   gitleaks:
     runs-on: ubuntu-latest
     steps:

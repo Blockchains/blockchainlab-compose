@@ -6,7 +6,7 @@
 
 Stdlib only (plus `forge` and `gh` on PATH). Exit codes: 0 ok, 2 bad input, 3 unsupported idea, 4 compatibility/licence, 5 build/test, 6 CI failed."""
 import argparse, importlib.util, json, os, re, shutil, subprocess, sys, time, datetime
-from . import recipes
+from . import agentdocs, recipes
 
 SOLC = "0.8.30"
 PINS = {"openzeppelin-contracts": "v5.7.0", "forge-std": "v1.17.0"}
@@ -129,6 +129,7 @@ def compose(idea, name, out=None, index=None, create=False, wait=False, owner="B
     for p, src in files.items():
         os.makedirs(os.path.dirname(os.path.join(out, p)), exist_ok=True); open(os.path.join(out, p), "w").write(src)
     write_project(out, name, title, idea, arch, features, cmap, lic, owner)
+    agentdocs.write(out, name, title, idea, arch, features, files, cmap, lic, owner, SOLC)   # AGENTS.md, llms.txt, blocks.json
     res["files"] = sorted(files)
     res["grok_review"] = grok_review(out, idea, files)
     if local_test and shutil.which("forge"):
@@ -288,6 +289,8 @@ Or run the **Deploy (Sepolia)** workflow after adding `DEPLOYER_PRIVATE_KEY` and
 {src_rows}
 
 Every copied file is unmodified and keeps its SPDX header; see [NOTICE](NOTICE). If the composer had an xAI key, [`REVIEW.md`](REVIEW.md) holds an automated Grok review of the glue (not an audit). Machine-readable: [`plan.json`](plan.json), [`component-map.json`](component-map.json).
+
+**For AI agents:** [`AGENTS.md`](AGENTS.md) (setup, commands, structure, rules), [`llms.txt`](llms.txt) and the [`blocks.json`](blocks.json) manifest ([schema](https://github.com/Blockchains/.github/blob/main/docs/BLOCKS-SCHEMA.md)). How Blockchains blocks fit together: [Build with Blocks](https://github.com/Blockchains/.github/blob/main/docs/BUILD-WITH-BLOCKS.md).
 
 ## Licence
 {lic['project_license']} for the generated glue. {lic.get('warning') or 'All copied components are permissively licensed.'}

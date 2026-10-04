@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Blockchains/.github/main/docs/blocks.schema.json",
+  "title": "Blockchains building-block manifest (blocks.json)",
+  "description": "Machine-readable description of what a Blockchains repository exports and how to compose it with other blocks. Documented in docs/BLOCKS-SCHEMA.md.",
+  "type": "object",
+  "required": ["schema_version", "name", "repo", "summary", "kind", "stability", "license", "entrypoints", "inputs", "outputs", "deps", "compatible_with", "tests", "docs"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "schema_version": { "const": "1.0" },
+    "name": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+    "repo": { "type": "string", "pattern": "^Blockchains/[A-Za-z0-9._-]+$" },
+    "summary": { "type": "string", "minLength": 10, "maxLength": 400 },
+    "kind": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": { "enum": ["library", "contracts", "http-api", "dataset", "mcp-server", "cli", "github-action", "web-app", "browser-extension", "template", "index", "curated-list", "docs", "automation"] }
+    },
+    "stability": { "enum": ["stable", "beta", "experimental", "reference"] },
+    "version": { "type": "string" },
+    "license": { "type": "string", "description": "SPDX id, or NOASSERTION when the repo has no licence file" },
+    "homepage": { "type": "string", "format": "uri" },
+    "entrypoints": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type", "name", "ref"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "enum": ["npm", "pypi", "git", "http", "mcp-stdio", "docker", "cli", "solidity", "file", "github-action", "web", "browser-script"] },
+          "name": { "type": "string" },
+          "ref": { "type": "string", "description": "Path in the repo, URL, image or command that the entrypoint resolves to" },
+          "install": { "type": "string" },
+          "usage": { "type": "string" },
+          "exports": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "inputs": { "$ref": "#/$defs/ports" },
+    "outputs": { "$ref": "#/$defs/ports" },
+    "deps": { "type": "array", "items": { "type": "string" }, "description": "Runtime/toolchain dependencies, e.g. 'node>=18', 'foundry', 'python>=3.10'" },
+    "compatible_with": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["repo", "how"], "additionalProperties": false,
+        "properties": { "repo": { "type": "string", "pattern": "^Blockchains/[A-Za-z0-9._-]+$" }, "how": { "type": "string" } }
+      }
+    },
+    "tests": {
+      "type": "object", "required": ["command"], "additionalProperties": false,
+      "properties": { "command": { "type": "string" }, "ci": { "type": "string" }, "network": { "type": "boolean", "description": "true if tests hit live networks" } }
+    },
+    "env": {
+      "type": "array",
+      "items": { "type": "object", "required": ["name", "required"], "additionalProperties": false,
+        "properties": { "name": { "type": "string" }, "required": { "type": "boolean" }, "purpose": { "type": "string" } } }
+    },
+    "docs": {
+      "type": "object", "required": ["readme", "agents", "llms"], "additionalProperties": false,
+      "properties": { "readme": { "type": "string" }, "agents": { "type": "string" }, "llms": { "type": "string" }, "extra": { "type": "array", "items": { "type": "string" } } }
+    },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["name", "type"], "additionalProperties": false,
+        "properties": { "name": { "type": "string" }, "type": { "type": "string" }, "description": { "type": "string" } }
+      }
+    }
+  }
+}

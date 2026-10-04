@@ -13,7 +13,8 @@ Idea-to-repo engine behind blockchainlab.com/forge: turns a plain-language token
 ## Setup
 
 ```bash
-pip --version   # stdlib only
+pip --version   # engine is stdlib only
+pip install jsonschema   # only for the tests (blocks.json schema validation)
 foundryup        # forge on PATH
 ```
 
@@ -40,7 +41,9 @@ Tests hit **live** public networks/APIs (the org rule is no mocks). A failure ca
 |---|---|
 | `blcompose/compose.py` | pipeline + CLI (`main`) |
 | `blcompose/recipes.py` | capability → glue/test generators |
-| `tests/test_engine.py` | unit tests |
+| `blcompose/agentdocs.py` | AGENTS.md / llms.txt / blocks.json for composed repos (parses src/*.sol) |
+| `blcompose/blocks.schema.json` | vendored copy of the org blocks schema (a test checks it matches the published one) |
+| `tests/test_engine.py, tests/test_agentdocs.py` | unit tests |
 | `.github/workflows/compose.yml` | dispatchable Action used by blockchainlab.com |
 | `.github/workflows/ci.yml` | re-composes both reference ideas + refusal check |
 
@@ -53,6 +56,7 @@ Tests hit **live** public networks/APIs (the org rule is no mocks). A failure ca
 ## Extension points
 
 - New capability: add a recipe in `blcompose/recipes.py`, the taxonomy id in blockchainlab-index `taxonomy/capabilities.json`, and a CI idea that exercises it.
+- Generated agent docs: edit `blcompose/agentdocs.py`; `tests/test_agentdocs.py` validates the manifest against the schema and the real generated sources.
 
 ## Do
 
