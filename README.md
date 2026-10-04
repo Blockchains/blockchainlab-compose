@@ -48,6 +48,42 @@ CI here re-composes both ideas from the live index on every push, runs their tes
 
 MIT licence. Generated projects are MIT; copied components keep their own licences (see each project's NOTICE).
 
+<!-- blocks:start -->
+## Use as a building block
+
+> **For AI agents and builders:** read [`AGENTS.md`](AGENTS.md) (setup, commands, structure, rules), [`llms.txt`](llms.txt) (doc map) and the machine-readable [`blocks.json`](blocks.json) ([schema](https://github.com/Blockchains/.github/blob/main/docs/BLOCKS-SCHEMA.md)). How all Blockchains blocks fit together: **[Build with Blocks](https://github.com/Blockchains/.github/blob/main/docs/BUILD-WITH-BLOCKS.md)** · org catalogue: [https://blockchains.github.io/blocks.json](https://blockchains.github.io/blocks.json).
+
+**What it exports**
+
+| Export | Type | Install / access |
+|---|---|---|
+| `python3 -m blcompose.compose` | cli | `python3 -m blcompose.compose "<idea>" --name <repo> [--out DIR] [--index PATH] [--json result.json] [--create --wait]` |
+| `Compose a project` | github-action | `workflow_dispatch inputs: idea, name, request_id → results/<request_id>.json` |
+
+**Minimal example** (the same command CI runs on every push)
+
+```bash
+git clone https://github.com/Blockchains/blockchainlab-compose && cd blockchainlab-compose
+python3 -m blcompose.compose "A community governance token with permit approvals, vote delegation and an on-chain governor with a timelock" \
+  --name my-dao --out /tmp/my-dao --json my-dao.json     # generate + forge test locally, no repo created
+```
+
+**Inputs → outputs**
+
+- In: `idea` (string) plain-language description; `--name` (string) new repo name; `--index` (path) local blockchainlab-index checkout (cloned if omitted)
+- Out: `Foundry project` (directory) src/, test/, script/Deploy.s.sol, CI, NOTICE, plan.json, component-map.json; `result JSON` (file) links, capabilities, components, test results; `exit 3` (code) idea needs an unsupported capability
+
+**Composes with**
+
+- [Blockchains/blockchainlab-index](https://github.com/Blockchains/blockchainlab-index): component source (catalog, components, taxonomy)
+- [Blockchains/forge-dao-governance-token](https://github.com/Blockchains/forge-dao-governance-token): reference output, re-composed in CI
+- [Blockchains/forge-usd-priced-membership-nft](https://github.com/Blockchains/forge-usd-priced-membership-nft): reference output, re-composed in CI
+- [Blockchains/grokhack-forge](https://github.com/Blockchains/grokhack-forge): sister composer for Grok apps
+- [Blockchains/blockchainlab-sdk](https://github.com/Blockchains/blockchainlab-sdk): add a data layer to a generated dApp
+
+**Versioning & stability:** `beta`. Supported capabilities: fungible-token, token-permit, governance, nft, royalties, price-oracle, pausable, access-control (archetypes token | nft). Anything else exits 3 with the supported list. Components are pinned to fork release tags; generated projects pin solc 0.8.30.
+<!-- blocks:end -->
+
 ## Configuration
 
 | Variable / flag | Required | Purpose |

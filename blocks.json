@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Blockchains/.github/main/docs/blocks.schema.json",
+  "schema_version": "1.0",
+  "name": "blockchainlab-compose",
+  "repo": "Blockchains/blockchainlab-compose",
+  "summary": "Idea-to-repo engine behind blockchainlab.com/forge: turns a plain-language token/NFT idea into a tested Foundry project (components from blockchainlab-index, pragma/licence checks, generated glue, tests, deploy script, CI) and optionally creates it under github.com/Blockchains.",
+  "kind": [
+    "cli",
+    "github-action"
+  ],
+  "stability": "beta",
+  "license": "MIT",
+  "entrypoints": [
+    {
+      "type": "cli",
+      "name": "python3 -m blcompose.compose",
+      "ref": "blcompose/compose.py",
+      "usage": "python3 -m blcompose.compose \"<idea>\" --name <repo> [--out DIR] [--index PATH] [--json result.json] [--create --wait]"
+    },
+    {
+      "type": "github-action",
+      "name": "Compose a project",
+      "ref": ".github/workflows/compose.yml",
+      "usage": "workflow_dispatch inputs: idea, name, request_id → results/<request_id>.json"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "idea",
+      "type": "string",
+      "description": "plain-language description"
+    },
+    {
+      "name": "--name",
+      "type": "string",
+      "description": "new repo name"
+    },
+    {
+      "name": "--index",
+      "type": "path",
+      "description": "local blockchainlab-index checkout (cloned if omitted)"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Foundry project",
+      "type": "directory",
+      "description": "src/, test/, script/Deploy.s.sol, CI, NOTICE, plan.json, component-map.json"
+    },
+    {
+      "name": "result JSON",
+      "type": "file",
+      "description": "links, capabilities, components, test results"
+    },
+    {
+      "name": "exit 3",
+      "type": "code",
+      "description": "idea needs an unsupported capability"
+    }
+  ],
+  "deps": [
+    "python>=3.10",
+    "foundry (forge)",
+    "git",
+    "gh (for --create)"
+  ],
+  "compatible_with": [
+    {
+      "repo": "Blockchains/blockchainlab-index",
+      "how": "component source (catalog, components, taxonomy)"
+    },
+    {
+      "repo": "Blockchains/forge-dao-governance-token",
+      "how": "reference output, re-composed in CI"
+    },
+    {
+      "repo": "Blockchains/forge-usd-priced-membership-nft",
+      "how": "reference output, re-composed in CI"
+    },
+    {
+      "repo": "Blockchains/grokhack-forge",
+      "how": "sister composer for Grok apps"
+    },
+    {
+      "repo": "Blockchains/blockchainlab-sdk",
+      "how": "add a data layer to a generated dApp"
+    }
+  ],
+  "tests": {
+    "command": "python3 -m unittest discover -s tests -v",
+    "ci": ".github/workflows/ci.yml",
+    "network": true
+  },
+  "env": [
+    {
+      "name": "XAI_API_KEY",
+      "required": false,
+      "purpose": "one Grok review call written to REVIEW.md (not an audit)"
+    },
+    {
+      "name": "MAINNET_RPC_URL",
+      "required": false,
+      "purpose": "enables generated live-chain fork tests"
+    },
+    {
+      "name": "FORGE_TOKEN",
+      "required": false,
+      "purpose": "repo secret; needed by the Action to create repos"
+    }
+  ],
+  "docs": {
+    "readme": "README.md",
+    "agents": "AGENTS.md",
+    "llms": "llms.txt"
+  }
+}

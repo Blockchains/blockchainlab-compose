@@ -1,0 +1,24 @@
+# blockchainlab-compose
+
+> Idea-to-repo engine behind blockchainlab.com/forge: turns a plain-language token/NFT idea into a tested Foundry project (components from blockchainlab-index, pragma/licence checks, generated glue, tests, deploy script, CI) and optionally creates it under github.com/Blockchains.
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/Blockchains/blockchainlab-compose/main/README.md): overview, install and the 'Use as a building block' section
+- [AGENTS.md](https://raw.githubusercontent.com/Blockchains/blockchainlab-compose/main/AGENTS.md): setup, build/test commands, structure map, conventions and rules for AI coding agents
+- [blocks.json](https://raw.githubusercontent.com/Blockchains/blockchainlab-compose/main/blocks.json): machine-readable building-block manifest (entrypoints, inputs, outputs, deps, compatible blocks)
+
+## Key files
+
+- [blcompose/compose.py](https://github.com/Blockchains/blockchainlab-compose/blob/main/blcompose/compose.py): engine
+- [blcompose/recipes.py](https://github.com/Blockchains/blockchainlab-compose/blob/main/blcompose/recipes.py): recipes
+
+## Related
+
+- [Build with Blocks](https://github.com/Blockchains/.github/blob/main/docs/BUILD-WITH-BLOCKS.md): how to assemble projects from Blockchains repos
+- [Org llms.txt](https://blockchains.github.io/llms.txt) · [blocks catalogue](https://blockchains.github.io/blocks.json)
+- [Blockchains/blockchainlab-index](https://github.com/Blockchains/blockchainlab-index): component source (catalog, components, taxonomy)
+- [Blockchains/forge-dao-governance-token](https://github.com/Blockchains/forge-dao-governance-token): reference output, re-composed in CI
+- [Blockchains/forge-usd-priced-membership-nft](https://github.com/Blockchains/forge-usd-priced-membership-nft): reference output, re-composed in CI
+- [Blockchains/grokhack-forge](https://github.com/Blockchains/grokhack-forge): sister composer for Grok apps
+- [Blockchains/blockchainlab-sdk](https://github.com/Blockchains/blockchainlab-sdk): add a data layer to a generated dApp
