@@ -47,3 +47,21 @@ Needs Python 3.10+, `forge`, `git`, and (for `--create`) `gh` authenticated as B
 CI here re-composes both ideas from the live index on every push, runs their tests, and checks an unsupported idea is refused.
 
 MIT licence. Generated projects are MIT; copied components keep their own licences (see each project's NOTICE).
+
+## Configuration
+
+| Variable / flag | Required | Purpose |
+|---|---|---|
+| `XAI_API_KEY` | no | One Grok review call (`grok-4.7`, fallback `grok-4.5`) written to `REVIEW.md`; skipped when unset |
+| `MAINNET_RPC_URL` | no | Enables the generated live-chain fork tests |
+| `--index PATH` | no | Use a local blockchainlab-index checkout instead of cloning it |
+| `gh` auth as Blockchains | for `--create` | Create and push the new repo |
+| `FORGE_TOKEN` (repo secret) | for the Action | Fine-grained PAT; `GITHUB_TOKEN` cannot create repositories |
+| `DEPLOYER_PRIVATE_KEY`, `SEPOLIA_RPC_URL` (secrets in generated repos) | for deploy | Used by each generated repo's Sepolia deploy workflow |
+
+## Contributing
+
+Issues and pull requests are welcome. Please read the [contributing guide](https://github.com/Blockchains/.github/blob/main/CONTRIBUTING.md), [code of conduct](https://github.com/Blockchains/.github/blob/main/CODE_OF_CONDUCT.md) and [security policy](https://github.com/Blockchains/.github/blob/main/SECURITY.md) first.
+
+---
+Built by Blockchain Lab — [blockchainlab.com](https://blockchainlab.com/?utm_source=github&utm_medium=readme&utm_campaign=blockchainlab-compose)
