@@ -37,6 +37,7 @@ jobs:
       - name: Compose, test, create repo, wait for CI
         env:
           GH_TOKEN: ${{ secrets.FORGE_TOKEN }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}  # optional; only used if the secret exists (Grok review -> REVIEW.md)
           IDEA: ${{ inputs.idea }}
           NAME: ${{ inputs.name }}
         run: |

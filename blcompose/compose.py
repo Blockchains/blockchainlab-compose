@@ -87,10 +87,12 @@ def compose(idea, name, out=None, index=None, create=False, wait=False, owner="B
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,90}", name or ""): raise SystemExit((2, "invalid repo name"))
     idx, ipath = load_index(index)
     pl, found = detect(idx, idea)
+    ignored = {k: v for k, v in found.items() if k not in recipes.SUPPORTED and v.get("why") and all(str(w).startswith("semantic") for w in v["why"])}
+    for k in ignored: found.pop(k)  # weak, embedding-only matches for capabilities we cannot generate are reported, not fatal
     caps = set(found)
     unsupported = sorted(caps - recipes.SUPPORTED - {"dev-framework", "math-lib", "signatures", "evm-client-lib", "wallet-ui"})
     arch = recipes.choose(caps)
-    res = {"idea": idea, "name": name, "capabilities": found, "archetype": arch, "index": {"path": ipath, "generated_at": idx.cat.get("generated_at")}}
+    res = {"idea": idea, "name": name, "capabilities": found, "ignored_semantic_only": ignored, "archetype": arch, "index": {"path": ipath, "generated_at": idx.cat.get("generated_at")}}
     if not arch or unsupported:
         res["error"] = (f"unsupported capabilities: {unsupported}. " if unsupported else "") + f"Supported today: {sorted(recipes.SUPPORTED)} (EVM token / NFT archetypes). Try blockchainlab-starters for other stacks."
         return 3, res
@@ -128,6 +130,7 @@ def compose(idea, name, out=None, index=None, create=False, wait=False, owner="B
         os.makedirs(os.path.dirname(os.path.join(out, p)), exist_ok=True); open(os.path.join(out, p), "w").write(src)
     write_project(out, name, title, idea, arch, features, cmap, lic, owner)
     res["files"] = sorted(files)
+    res["grok_review"] = grok_review(out, idea, files)
     if local_test and shutil.which("forge"):
         log("forge build + test")
         b = run(["forge", "build", "--sizes"], cwd=out, check=False)
@@ -139,6 +142,36 @@ def compose(idea, name, out=None, index=None, create=False, wait=False, owner="B
         code = publish(out, name, owner, idea, wait, res)
         if code: return code, res
     return 0, res
+
+GROK_MODELS = ("grok-4.7", "grok-4.5")
+
+def grok_review(out, idea, files):
+    """Optional: when XAI_API_KEY is in the environment, one real Grok call reviews the generated glue (written to REVIEW.md,
+    labelled as an AI review, not an audit). The key is never logged or written. No key -> skipped; 403 -> 'xAI credits needed'."""
+    import urllib.request, urllib.error
+    key = os.environ.get("XAI_API_KEY", "").strip()
+    if not key: return {"status": "skipped", "reason": "needs key (XAI_API_KEY not set)"}
+    src = "\n\n".join(f"// FILE {p}\n{c}" for p, c in sorted(files.items()) if p.startswith("src/"))[:24000]
+    prompt = ("You are reviewing Solidity glue code generated from OpenZeppelin/Chainlink components for this idea: " + idea +
+              "\nGive a concise review in Markdown: 1) what the contracts do, 2) up to 6 concrete risks or edge cases with the function name, "
+              "3) deployment checklist. No preamble, max 350 words.\n\n" + src)
+    last = None
+    for model in GROK_MODELS:
+        body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 900, "temperature": 0.2}).encode()
+        req = urllib.request.Request("https://api.x.ai/v1/chat/completions", data=body, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r: j = json.loads(r.read().decode())
+            text = j["choices"][0]["message"]["content"].strip()
+            open(os.path.join(out, "REVIEW.md"), "w").write(f"# AI review of the generated glue\n\nWritten by `{j.get('model', model)}` (xAI Grok) when this repo was composed. It is an automated review, **not an audit**.\n\n{text}\n")
+            log("grok review written with", j.get("model", model))
+            return {"status": "ok", "model": j.get("model", model), "usage": j.get("usage")}
+        except urllib.error.HTTPError as e:
+            msg = e.read().decode(errors="replace")[:300]; last = f"HTTP {e.code}: {msg}"
+            if e.code == 403 and re.search(r"credits|spending limit", msg, re.I): return {"status": "credits_needed", "reason": "xAI credits needed: " + msg}
+            if e.code in (401,): return {"status": "error", "reason": last}
+        except Exception as e:
+            last = type(e).__name__
+    return {"status": "error", "reason": last}
 
 def write_project(out, name, title, idea, arch, features, cmap, lic, owner):
     rem = sorted(set(cmap["remappings"]) | {"forge-std/=lib/forge-std/src/"})
@@ -254,7 +287,7 @@ Or run the **Deploy (Sepolia)** workflow after adding `DEPLOYER_PRIVATE_KEY` and
 |---|---|---|---|
 {src_rows}
 
-Every copied file is unmodified and keeps its SPDX header; see [NOTICE](NOTICE). Machine-readable: [`plan.json`](plan.json), [`component-map.json`](component-map.json).
+Every copied file is unmodified and keeps its SPDX header; see [NOTICE](NOTICE). If the composer had an xAI key, [`REVIEW.md`](REVIEW.md) holds an automated Grok review of the glue (not an audit). Machine-readable: [`plan.json`](plan.json), [`component-map.json`](component-map.json).
 
 ## Licence
 {lic['project_license']} for the generated glue. {lic.get('warning') or 'All copied components are permissively licensed.'}

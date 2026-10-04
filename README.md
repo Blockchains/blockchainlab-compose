@@ -9,10 +9,12 @@ the Blockchains forks, checks they fit together, writes the glue code, tests, de
 ```
 idea ─► capabilities: blockchainlab-index taxonomy matcher (+ optional bge-small semantic match) + deterministic keyword rules
      ─► archetype (token | nft)                       unsupported capability → exit 3 with the list of what is supported
+                                                       (embedding-only matches for unsupported capabilities are reported as ignored, not fatal)
      ─► components: exact files the glue imports, each looked up in blockchainlab-index (licence, pragma, pinned commit)
      ─► fetch: files + full import closure copied unmodified from the Blockchains forks at pinned release tags (NOTICE written)
      ─► compatibility: every pragma must accept solc 0.8.30; every SPDX id must be OSI; project licence verdict (GPL → refused for now)
      ─► generate: glue contracts, Foundry tests (unit + live-chain fork test when MAINNET_RPC_URL is set), Deploy.s.sol, CI, Sepolia deploy workflow, README
+     ─► optional Grok review (XAI_API_KEY in env: one grok-4.7 call, fallback grok-4.5 → REVIEW.md, labelled not-an-audit; 403 → 'xAI credits needed'; no key → skipped)
      ─► forge build + forge test locally ─► gitleaks ─► gh repo create Blockchains/<name> --push ─► wait for CI ─► JSON result with links
 ```
 
